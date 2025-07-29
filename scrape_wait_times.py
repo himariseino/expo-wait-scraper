@@ -39,10 +39,10 @@ async def scrape_wait_times():
 
             await page.goto(URL)
 
-            html = await page.content()
-            with open("debug.html", "w", encoding="utf-8") as f:
-                f.write(html)
-            logger.info("ページHTMLを debug.html に保存しました。")
+            # html = await page.content()
+            # with open("debug.html", "w", encoding="utf-8") as f:
+            #     f.write(html)
+            # logger.info("ページHTMLを debug.html に保存しました。")
 
             await page.wait_for_selector("table.table", timeout=20000)
 
