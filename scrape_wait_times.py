@@ -48,9 +48,9 @@ async def scrape_wait_times():
             await page.wait_for_selector("table.table", timeout=40000)
 
             html = await page.content()
-            print("===== HTML content START =====")
-            print(html)
-            print("===== HTML content END =====")
+            logger.info("===== HTML content START =====")
+            logger.info(html)
+            logger.info("===== HTML content END =====")
 
 
             rows = []
