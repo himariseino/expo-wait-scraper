@@ -38,6 +38,7 @@ async def scrape_wait_times():
             })
 
             await page.goto(URL, wait_until="networkidle")
+            await page.wait_for_timeout(5000) 
 
             # html = await page.content()
             # with open("debug.html", "w", encoding="utf-8") as f:
@@ -46,7 +47,11 @@ async def scrape_wait_times():
 
             await page.wait_for_selector("table.table", timeout=40000)
 
-            await page.wait_for_timeout(5000) 
+            html = await page.content()
+            print("===== HTML content START =====")
+            print(html)
+            print("===== HTML content END =====")
+
 
             rows = []
             for row in await page.query_selector_all("table.table tbody tr"):
