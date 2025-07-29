@@ -1,0 +1,12 @@
+# pyproject.toml
+[project]
+name = "expo-wait-scraper"
+version = "0.1.0"
+description = "Scrapes Expo 2025 pavilion wait times every hour"
+authors = ["your-name"]
+requires-python = ">=3.10"
+
+dependencies = [
+  "requests",
+  "beautifulsoup4",
+]
