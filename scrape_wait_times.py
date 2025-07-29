@@ -40,10 +40,11 @@ async def scrape_wait_times():
             await page.goto(URL, wait_until="networkidle")
             await page.wait_for_timeout(20000)
 
-            # html = await page.content()
-            # with open("debug.html", "w", encoding="utf-8") as f:
-            #     f.write(html)
-            # logger.info("ページHTMLを debug.html に保存しました。")
+
+            html = await page.content()
+            if len(html) < 10000:
+                logger.error(f"HTMLの長さが異常に短いです（{len(html)}文字）。ページの読み込みに失敗した可能性があります。")
+                raise RuntimeError("HTML content too short — failed to load page properly.")
 
             await page.wait_for_selector("table.table", timeout=150000)
 
