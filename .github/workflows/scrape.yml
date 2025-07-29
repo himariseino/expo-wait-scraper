@@ -2,7 +2,7 @@ name: Scrape Wait Times
 
 on:
   schedule:
-    - cron: '0 0-11 * * *'  # JST 9時〜20時の毎時00分
+    - cron: '0 0-11 * * *'  # JST 9:00〜20:00
   workflow_dispatch:
 
 jobs:
@@ -18,7 +18,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests beautifulsoup4
+          pip install requests beautifulsoup4 playwright
+
+      - name: Install Playwright Browsers
+        run: |
+          python -m playwright install chromium
 
       - name: Run scraper
         run: python scrape_wait_times.py
