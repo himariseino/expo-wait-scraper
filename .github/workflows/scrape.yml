@@ -2,14 +2,19 @@ name: Scrape Wait Times
 
 on:
   schedule:
-    - cron: '0 0-11 * * *'  # JST 9:00〜20:00
+    - cron: '0 0-11 * * *'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
