@@ -1,0 +1,32 @@
+name: Scrape Wait Times
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # 毎時00分に実行（UTC）
+  workflow_dispatch:     # 手動実行も可能
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run scraper
+        run: python scrape_wait_times.py
+
+      - name: Commit and push CSV
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add wait_times.csv
+          git commit -m "Update wait_times.csv ($(date -u))" || echo "No changes to commit"
+          git push
