@@ -44,12 +44,18 @@ async def scrape_wait_times():
 
             # ページ遷移と描画待ち
             await page.goto(URL, wait_until="networkidle", timeout=60000)
-            await page.wait_for_selector("table.table", timeout=30000)
 
-            # HTMLを保存
+            # HTML を保存（wait_for_selectorの前に）
             html = await page.content()
             with open("debug-dump.html", "w", encoding="utf-8") as f:
                 f.write(html)
+
+            # スクリーンショットも撮る（念のため）
+            await page.screenshot(path="debug.png", full_page=True)
+
+            # セレクタを待つ
+            await page.wait_for_selector("table.table", timeout=30000)
+
 
             # HTMLが極端に短い場合
             if len(html) < 50000:

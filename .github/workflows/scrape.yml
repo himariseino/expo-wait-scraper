@@ -39,8 +39,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: debug-html
-          path: debug-dump.html
-          if-no-files-found: ignore
+          path: |
+            debug-dump.html
+            debug.png
+          if-no-files-found: warn
 
       - name: Commit and push CSV
         env:
