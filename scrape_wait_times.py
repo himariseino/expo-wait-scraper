@@ -37,8 +37,8 @@ def fetch_wait_times_from_sheet():
             cells = [cell.get("v", "") if cell else "" for cell in row["c"]]
             if len(cells) >= 3:
                 now = datetime.now().isoformat()
-                name = clean_text(cells[0])
-                wait_time = clean_text(cells[1])
+                name = clean_text(cells[1])
+                wait_time = clean_text(cells[2])
                 post_time = clean_text(cells[3]) if len(cells) > 3 else ""
                 extracted_rows.append([now, name, wait_time, post_time])
 
