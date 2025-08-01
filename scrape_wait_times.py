@@ -19,15 +19,20 @@ URL = "https://expo2025.fun/%E3%83%91%E3%83%93%E3%83%AA%E3%82%AA%E3%83%B3%E5%BE%
 CSV_FILE = "wait_times.csv"
 
 def clean_text(text: str) -> str:
-    text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
-    text = re.sub(r'\s+', ' ', text)  # すべての空白類を1つのスペースに
+    text = re.sub(r'[\n\r\t]', ' ', text)
+    text = re.sub(r'\s+', ' ', text)
     return text.strip()
 
 async def scrape_wait_times():
     try:
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=False)
+            browser = await p.chromium.launch(headless=False)  # GitHub Actions では xvfb 必須
             page = await browser.new_page()
+
+            # イベントログ出力
+            page.on("console", lambda msg: logger.info(f"[console] {msg.type}: {msg.text}"))
+            page.on("requestfailed", lambda req: logger.warning(f"[request failed] {req.method} {req.url}"))
+            page.on("pageerror", lambda exc: logger.error(f"[page error] {exc}"))
 
             await page.set_extra_http_headers({
                 "User-Agent": (
@@ -37,44 +42,33 @@ async def scrape_wait_times():
                 )
             })
 
-            await page.goto(URL, wait_until="networkidle")
-            await page.wait_for_selector("table.table", timeout=150000)
-            # await page.wait_for_timeout(20000)
+            # ページ遷移と描画待ち
+            await page.goto(URL, wait_until="networkidle", timeout=60000)
+            await page.wait_for_selector("table.table", timeout=30000)
 
-
+            # HTMLを保存
             html = await page.content()
+            with open("debug-dump.html", "w", encoding="utf-8") as f:
+                f.write(html)
+
+            # HTMLが極端に短い場合
             if len(html) < 50000:
                 logger.error(f"HTMLの長さが異常に短いです（{len(html)}文字）。ページの読み込みに失敗した可能性があります。")
                 raise RuntimeError("HTML content too short — failed to load page properly.")
 
-            page.on("console", lambda msg: logger.info(f"[console] {msg.type}: {msg.text}"))
-            page.on("requestfailed", lambda request: logger.warning(f"[request failed] {request.url}"))
-            page.on("pageerror", lambda exc: logger.error(f"[page error] {exc}"))
-
-            await page.wait_for_selector("table.table", timeout=150000)
-
-            # html = await page.content()
-            # logger.info("===== HTML content START =====")
-            # logger.info(html)
-            # logger.info("===== HTML content END =====")
-
-
+            # テーブル抽出
             rows = []
             for row in await page.query_selector_all("table.table tbody tr"):
                 cols = await row.query_selector_all("td")
-                if len(cols) >= 2:
-                    name_raw = await cols[0].text_content()
-                    wait_raw = await cols[1].text_content()
-                    post_raw = await cols[2].text_content()
-                    name = clean_text(name_raw)
-                    wait_time = clean_text(wait_raw)
-                    post = clean_text(post_raw)
+                if len(cols) >= 3:
+                    name = clean_text(await cols[0].text_content())
+                    wait_time = clean_text(await cols[1].text_content())
+                    post = clean_text(await cols[2].text_content())
                     now = datetime.now().isoformat()
                     rows.append([now, name, wait_time, post])
 
             if rows:
-                logger.info(f"{len(rows)} 件の待ち時間データを取得しました。")
-
+                logger.info(f"{len(rows)} 件のデータを取得しました。")
                 dir_name = os.path.dirname(CSV_FILE)
                 if dir_name:
                     os.makedirs(dir_name, exist_ok=True)
