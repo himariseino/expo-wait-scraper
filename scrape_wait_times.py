@@ -26,7 +26,7 @@ def clean_text(text: str) -> str:
 async def scrape_wait_times():
     try:
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            browser = await p.chromium.launch(headless=False)
             page = await browser.new_page()
 
             await page.set_extra_http_headers({
@@ -38,13 +38,18 @@ async def scrape_wait_times():
             })
 
             await page.goto(URL, wait_until="networkidle")
-            await page.wait_for_timeout(20000)
+            await page.wait_for_selector("table.table", timeout=150000)
+            # await page.wait_for_timeout(20000)
 
 
             html = await page.content()
-            if len(html) < 10000:
+            if len(html) < 50000:
                 logger.error(f"HTMLの長さが異常に短いです（{len(html)}文字）。ページの読み込みに失敗した可能性があります。")
                 raise RuntimeError("HTML content too short — failed to load page properly.")
+
+            page.on("console", lambda msg: logger.info(f"[console] {msg.type}: {msg.text}"))
+            page.on("requestfailed", lambda request: logger.warning(f"[request failed] {request.url}"))
+            page.on("pageerror", lambda exc: logger.error(f"[page error] {exc}"))
 
             await page.wait_for_selector("table.table", timeout=150000)
 

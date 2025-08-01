@@ -11,6 +11,7 @@ permissions:
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,10 +28,18 @@ jobs:
 
       - name: Install Playwright Browsers
         run: |
-          python -m playwright install chromium
+          python -m playwright install --with-deps
 
       - name: Run scraper
         run: python scrape_wait_times.py
+
+      - name: Upload debug HTML (if exists)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-html
+          path: debug-dump.html
+          if-no-files-found: ignore
 
       - name: Commit and push CSV
         env:
@@ -41,4 +50,3 @@ jobs:
           git add wait_times.csv
           git commit -m "Update wait_times.csv ($(date -u))" || echo "No changes to commit"
           git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" HEAD:master
-
