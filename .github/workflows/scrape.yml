@@ -1,21 +1,18 @@
-name: Scrape Wait Times
+name: Debug Scrape Wait Times
 
 on:
-  schedule:
-    - cron: '0 0-11 * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  run-scraper:
+  run-debug-scraper:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -30,10 +27,14 @@ jobs:
         run: |
           python -m playwright install --with-deps
 
-      - name: Run scraper
-        run: python scrape_wait_times.py
+      - name: Install xvfb (GUI仮想環境)
+        run: sudo apt-get update && sudo apt-get install -y xvfb
 
-      - name: Upload debug HTML (if exists)
+      - name: Run scraper with GUI (via xvfb)
+        run: |
+          xvfb-run --auto-servernum --server-args='-screen 0 1024x768x24' python scrape_wait_times.py
+
+      - name: Upload debug HTML
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -48,5 +49,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add wait_times.csv
-          git commit -m "Update wait_times.csv ($(date -u))" || echo "No changes to commit"
+          git commit -m "Debug scrape: update wait_times.csv ($(date -u))" || echo "No changes to commit"
           git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" HEAD:master
